@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Lexicon Forge: Kinetic Word Alchemy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Dynamic In-Game HUD -->
+        <div id="hud" class="hidden">
+            <div class="hud-top">
+                <div class="stat-box">
+                    <span class="stat-label">SCORE</span>
+                    <span id="scoreText" class="stat-value">0</span>
+                </div>
+                <div class="stat-box center">
+                    <div id="currentWordContainer" class="current-word-display">
+                        <span id="currentWordText" class="word-text">SWIPE LETTERS</span>
+                        <span id="wordScoreBonus" class="word-bonus">+0</span>
+                    </div>
+                </div>
+                <div class="stat-box right">
+                    <span class="stat-label">STREAK</span>
+                    <span id="streakText" class="stat-value highlight">x1.0</span>
+                </div>
+            </div>
+
+            <!-- Objective & Level Info -->
+            <div class="hud-mid">
+                <div id="objectiveBanner" class="objective-banner">
+                    <span id="levelTitleText" class="level-title">SECTOR 1</span>
+                    <span id="objectiveText" class="objective-desc">SPELL 3 WORDS OF 4+ LETTERS</span>
+                </div>
+            </div>
+
+            <!-- Bottom Action Controls -->
+            <div class="hud-bottom">
+                <div class="stat-box timer-box">
+                    <span class="stat-label">TIME</span>
+                    <span id="timerText" class="stat-value">60s</span>
+                </div>
+                <div class="center-actions">
+                    <button id="submitWordBtn" class="btn primary-btn action-btn disabled">
+                        <span class="btn-text">FORGE WORD</span>
+                    </button>
+                    <button id="clearWordBtn" class="btn secondary-btn icon-btn-small" title="Clear selection">✕</button>
+                </div>
+                <div class="stat-box words-box">
+                    <span class="stat-label">FORGED</span>
+                    <span id="wordsCountText" class="stat-value">0</span>
+                </div>
+            </div>
+
+            <button id="pauseBtn" class="icon-btn pause-icon">⏸</button>
+            <button id="audioToggleBtn" class="icon-btn audio-icon">🔊</button>
+        </div>
+
+        <!-- Main Menu Modal -->
+        <div id="mainMenu" class="overlay active">
+            <div class="glass-card main-card">
+                <div class="logo-container">
+                    <div class="glowing-forge"></div>
+                    <h1 class="game-title">LEXICON FORGE</h1>
+                    <h2 class="game-subtitle">KINETIC WORD ALCHEMY</h2>
+                </div>
+
+                <div class="menu-actions">
+                    <button id="startCampaignBtn" class="btn primary-btn">
+                        <span class="btn-text">FORGE JOURNEY</span>
+                        <span class="btn-sub">30 Alchemy Sectors</span>
+                    </button>
+                    <button id="startEndlessBtn" class="btn secondary-btn">
+                        <span class="btn-text">BLITZ MODE</span>
+                        <span class="btn-sub">60s High Score Surge</span>
+                    </button>
+                    <button id="howToPlayBtn" class="btn tertiary-btn">HOW TO PLAY</button>
+                </div>
+
+                <div class="menu-footer">
+                    <div class="high-score-display">
+                        BEST BLITZ SCORE: <span id="menuHighScore">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- How To Play Modal -->
+        <div id="howToPlayModal" class="overlay hidden">
+            <div class="glass-card modal-card">
+                <h2>HOW TO PLAY</h2>
+                <div class="instructions-content">
+                    <div class="instruction-step">
+                        <div class="step-num">1</div>
+                        <div class="step-text">
+                            <strong>Swipe Letters:</strong> Drag your finger or mouse across floating letter orbs in any direction to form English words.
+                        </div>
+                    </div>
+                    <div class="instruction-step">
+                        <div class="step-num">2</div>
+                        <div class="step-text">
+                            <strong>Pivot Chaining:</strong> End a word on a letter and start your next word from that same letter to trigger massive <strong>Streak Multipliers</strong>!
+                        </div>
+                    </div>
+                    <div class="instruction-step">
+                        <div class="step-num">3</div>
+                        <div class="step-text">
+                            <strong>Elemental Reactions:</strong> Spell 5+ letter words or words with rare letters (Q, X, Z, double letters) to cause <strong>Ignite (Fire)</strong>, <strong>Tesla (Lightning)</strong>, or <strong>Shatter (Ice)</strong> explosions!
+                        </div>
+                    </div>
+                </div>
+                <button id="closeHowToPlayBtn" class="btn primary-btn">GOT IT</button>
+            </div>
+        </div>
+
+        <!-- Sector Select Modal -->
+        <div id="levelSelectModal" class="overlay hidden">
+            <div class="glass-card modal-card wide">
+                <h2>SELECT ALCHEMY SECTOR</h2>
+                <div id="levelGrid" class="level-grid">
+                    <!-- JS Rendered Level Cards -->
+                </div>
+                <button id="backFromLevelsBtn" class="btn secondary-btn">BACK</button>
+            </div>
+        </div>
+
+        <!-- Pause Modal -->
+        <div id="pauseModal" class="overlay hidden">
+            <div class="glass-card modal-card">
+                <h2>GAME PAUSED</h2>
+                <div class="menu-actions">
+                    <button id="resumeBtn" class="btn primary-btn">RESUME</button>
+                    <button id="restartLevelBtn" class="btn secondary-btn">RESTART SECTOR</button>
+                    <button id="quitToMenuBtn" class="btn tertiary-btn">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Victory Modal -->
+        <div id="levelCompleteModal" class="overlay hidden">
+            <div class="glass-card modal-card">
+                <div class="victory-header">
+                    <span class="victory-icon">🔥</span>
+                    <h2 class="victory-title">SECTOR FORGED!</h2>
+                </div>
+                <div class="score-summary">
+                    <div class="summary-row">
+                        <span>SECTOR SCORE</span>
+                        <span id="levelScoreVal" class="val">0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>WORDS FORGED</span>
+                        <span id="levelWordsVal" class="val">0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>BEST WORD</span>
+                        <span id="levelBestWordVal" class="val">-</span>
+                    </div>
+                </div>
+                <div class="menu-actions">
+                    <button id="nextLevelBtn" class="btn primary-btn">NEXT SECTOR</button>
+                    <button id="retryLevelBtn" class="btn secondary-btn">REPLAY</button>
+                    <button id="levelCompleteMenuBtn" class="btn tertiary-btn">SECTOR SELECT</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Defeat / Game Over Modal -->
+        <div id="gameOverModal" class="overlay hidden">
+            <div class="glass-card modal-card defeat">
+                <h2>TIME EXPIRED</h2>
+                <p id="defeatReasonText">Your alchemy forge cooled down.</p>
+                <div class="score-summary">
+                    <div class="summary-row">
+                        <span>FINAL SCORE</span>
+                        <span id="finalScoreVal" class="val">0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>TOTAL WORDS</span>
+                        <span id="finalWordsVal" class="val">0</span>
+                    </div>
+                </div>
+                <div class="menu-actions">
+                    <button id="retryGameOverBtn" class="btn primary-btn">TRY AGAIN</button>
+                    <button id="gameOverMenuBtn" class="btn secondary-btn">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/engine/Vector2.js"></script>
+    <script src="js/engine/Physics.js"></script>
+    <script src="js/engine/ParticleSystem.js"></script>
+    <script src="js/engine/SoundSynth.js"></script>
+    <script src="js/game/Dictionary.js"></script>
+    <script src="js/game/Entities.js"></script>
+    <script src="js/game/WordWeaver.js"></script>
+    <script src="js/game/LevelManager.js"></script>
+    <script src="js/game/Game.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
